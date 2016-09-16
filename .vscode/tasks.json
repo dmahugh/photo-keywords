@@ -1,0 +1,20 @@
+{
+    "version": "0.1.0",
+    "command": "cmd",
+    "isShellCommand": false,
+    "args": ["/c"],
+    "tasks": [
+        {
+			// build task - Ctrl-B
+            "taskName": "python",
+			"isBuildCommand": true,
+            "args": ["${file}"]
+        },
+        {
+			// test task - Ctrl-T
+            "taskName": "py.test",
+			"isTestCommand": true,
+            "args": ["-v"]
+        }
+    ]
+}
