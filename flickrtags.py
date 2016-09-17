@@ -36,6 +36,9 @@ for photo in resp['photos']['photo']:
         '&api_sig=630073f2a1c6ac5e08457143ebc979ac'
     response = requests.get(endpoint)
     photo_info = json.loads(response.text)
+    print('-'*80)
+    print(str(photo_info))
+    print('-'*80)
     for tag in photo_info['photo']['tags']['tag']:
         tagname = tag['raw']
         print('  >> Tag: ' + tagname)
