@@ -14,7 +14,7 @@ def get_tags_example(user_id):
     """
 
     # get some photos for testing
-    per_page = '20' # max=500 for production use later
+    per_page = '10' # max=500 for production use later
     endpoint = 'https://api.flickr.com/services/rest/' + \
         '?method=flickr.people.getPhotos' + \
         '&api_key=cbfb84b23a5a7af2a0bf27cc8a87d85b&user_id=' + user_id + \
@@ -22,16 +22,17 @@ def get_tags_example(user_id):
     response = requests.get(endpoint)
     resp = json.loads(response.text)
 
-    # iterate through the photos and display title and tags
+    # iterate through the photos and display keywords/timestamp for each
     for photo in resp['photos']['photo']:
+        keywords = set() # set of unique keywords
         title = photo['title']
         user_id = photo['owner']
         photo_id = photo['id']
         secret = photo['secret']
         photo_url = 'http://flickr.com/photos/' + user_id + '/' + photo_id
-        print(photo_url)
-        print('  >> Title: ' + title)
-        # now get info for this single photo
+        keywords.add(title.strip().lower())
+
+        # get info for this single photo
         endpoint = 'https://api.flickr.com/services/rest/' + \
             '?method=flickr.photos.getInfo' + \
             '&api_key=cbfb84b23a5a7af2a0bf27cc8a87d85b&photo_id=' + photo_id + \
@@ -39,10 +40,11 @@ def get_tags_example(user_id):
         response = requests.get(endpoint)
         photo_info = json.loads(response.text)
         taken = photo_info['photo']['dates']['taken']
-        print('  >> Taken: ' + taken)
         for tag in photo_info['photo']['tags']['tag']:
             tagname = tag['raw']
-            print('  >> Tag: ' + tagname)
+            keywords.add(tagname.strip().lower())
+
+        print(photo_url + ' - ' + taken + ' - ' + str(keywords))
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
