@@ -9,6 +9,20 @@ import os
 import requests
 
 #-------------------------------------------------------------------------------
+def cache_filename(*, user_id, pageno, datatype):
+    """Get filename for local cached page of Flickr data.
+
+    user_id = Flickr user ID
+    pageno = page #
+    datatype = 'tags' or 'photostream'
+
+    Returns the filename to be used for reading/writing this cached data.
+    """
+    filename = user_id + '-' + datatype + '-page' + str(pageno).zfill(3) + '.json'
+    source_folder = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(source_folder, 'cache/' + filename)
+
+#-------------------------------------------------------------------------------
 def cache_photostream(user_id):
     """Retrieve a user's list of photos and save locally.
 
@@ -16,7 +30,7 @@ def cache_photostream(user_id):
 
     Files are written to the cache subfolder, one per page of API results.
     """
-    per_page = '500'
+    per_page = '100'
     api_key = get_apikey('dougerino-jamiesearcher')
 
     endpoint = 'https://api.flickr.com/services/rest/' + \
@@ -27,7 +41,7 @@ def cache_photostream(user_id):
 
     response = requests.get(endpoint)
     jsondata = json.loads(response.text)
-    write_photostream(user_id=user_id, pageno=1, jsondata=jsondata)
+    write_cache(user_id=user_id, pageno=1, datatype='photostream', jsondata=jsondata)
 
     tot_pages = jsondata['photos']['pages']
     for pageno in range(2, tot_pages + 1):
@@ -42,9 +56,53 @@ def cache_photostream(user_id):
         response = requests.get(endpoint)
         jsondata = json.loads(response.text)
 
-        write_photostream(user_id=user_id, pageno=pageno, jsondata=jsondata)
+        write_cache(user_id=user_id, pageno=pageno, datatype='photostream', jsondata=jsondata)
         #if pageno >= 3:
         #    break
+
+#-------------------------------------------------------------------------------
+def cache_tags(*, user_id, pageno):
+    """Retrieve photo tags for a page of user's photostream.
+
+    user_id = Flickr user ID
+    pageno = page # of results
+
+    Reads the locally cached data (as saved by cache_photostream()) for the
+    specified user/page, then iterates through the photos and makes an API
+    call to get information about each one, then writes all of the tag data
+    for the page's photos into a file in the cache folder named
+    <user>-tags-pageXXX.json
+    """
+    filename = cache_filename(user_id=user_id, pageno=pageno, datatype='photostream')
+    with open(filename, 'r') as datafile:
+        photolist = json.loads(datafile.read())['photos']['photo']
+
+    master_list = [] # list of photos (dictionaries)
+
+    #photo_limit = 4 # ///
+    for photo in photolist:
+        photo_info = photo_detail(photo)
+
+        photo_url = 'http://flickr.com/photos/' + user_id + '/' + photo['id']
+        taken = photo_info['photo']['dates']['taken']
+        title = photo['title'].strip().lower()
+
+        keywords = [tag['raw'].strip().lower() for tag in photo_info['photo']['tags']['tag']]
+        keywords.append('flickr-' + user_id)
+
+        taglist = ','.join(sorted(keywords))
+        print(photo_url + ' - ' + taken + ' - ' + title + ' - ' + taglist)
+
+        master_list.append({'user_id': user_id,
+                            'title': title,
+                            'keywords': keywords,
+                            'photo_url': photo_url})
+
+        #photo_limit -= 1 # ///
+        #if photo_limit == 0: # ///
+        #    break # ///
+
+    write_cache(user_id=user_id, pageno=pageno, datatype='tags', jsondata=master_list)
 
 #-------------------------------------------------------------------------------
 def get_apikey(app):
@@ -85,8 +143,8 @@ def get_tags_example(user_id):
 
         keywords = {tag['raw'].strip().lower() for tag in photo_info['photo']['tags']['tag']}
         keywords.add('flickr-' + user_id)
-        taglist = ','.join(sorted(keywords))
 
+        taglist = ','.join(sorted(keywords))
         print(photo_url + ' - ' + taken + ' - ' + title + ' - ' + taglist)
 
 #-------------------------------------------------------------------------------
@@ -127,21 +185,18 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
-def write_photostream(*, user_id, pageno, jsondata):
-    """Write a page of photostream results to local cache.
+def write_cache(*, user_id, pageno, datatype, jsondata):
+    """Write photo tag data to local cache for one page of photostream.
 
     user_id = Flickr user ID
     pageno = page number of the paged results from the Flickr API
-    jsondata = the JSON payload returned for this user/page
+    jsondata = the JSON payload - list of photos (dictionaries)
 
     The data is written to the cache subfolder with this naming convention:
-    <user>-photostream-pageXXX.json
+    <user>-tags-pageXXX.json
     """
-    print('Caching photo list for {0} page # {1}'.format(user_id, pageno))
-
-    filename = user_id + '-photostream-page' + str(pageno).zfill(3) + '.json'
-    source_folder = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(source_folder, 'cache/' + filename)
+    filename = cache_filename(user_id=user_id, pageno=pageno, datatype=datatype)
+    print('--> writing ' + filename)
 
     with open(filename, 'w') as fhandle:
         fhandle.write(json.dumps(jsondata, indent=4, sort_keys=True))
@@ -149,4 +204,13 @@ def write_photostream(*, user_id, pageno, jsondata):
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
     #get_tags_example('dogerino')
-    cache_photostream('dougerino')
+    #cache_photostream('dogerino')
+    #cache_photostream('dougerino')
+
+    # status of caching tag data:
+    # dogerino: 1 done, 2-108 remaining
+    # dougerino: 0 done, 1-121 remaining
+    start = 2
+    end = 10
+    for pageno in range(start, end + 1):
+        cache_tags(user_id='dogerino', pageno=pageno)
