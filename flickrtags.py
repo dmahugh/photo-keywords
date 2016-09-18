@@ -38,12 +38,18 @@ def get_tags_example(user_id):
     """
     photolist = photostream(user_id)
     for photo in photolist['photos']['photo']:
+
         photo_info = photo_detail(photo)
-        keywords = {tag['raw'].strip().lower() for tag in photo_info['photo']['tags']['tag']}
-        keywords.add(photo['title'].strip().lower())
+
         photo_url = 'http://flickr.com/photos/' + user_id + '/' + photo['id']
         taken = photo_info['photo']['dates']['taken']
-        print(photo_url + ' - ' + taken + ' - ' + str(keywords))
+        title = photo['title'].strip().lower()
+
+        keywords = {tag['raw'].strip().lower() for tag in photo_info['photo']['tags']['tag']}
+        keywords.add('flickr-' + user_id)
+        taglist = ','.join(sorted(keywords))
+
+        print(photo_url + ' - ' + taken + ' - ' + title + ' - ' + taglist)
 
 #-------------------------------------------------------------------------------
 def photo_detail(photo):
