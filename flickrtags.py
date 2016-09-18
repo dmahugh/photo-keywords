@@ -9,6 +9,44 @@ import os
 import requests
 
 #-------------------------------------------------------------------------------
+def cache_photostream(user_id):
+    """Retrieve a user's list of photos and save locally.
+
+    user_id = the Flickr user whose photos will be listed
+
+    Files are written to the cache subfolder, one per page of API results.
+    """
+    per_page = '500'
+    api_key = get_apikey('dougerino-jamiesearcher')
+
+    endpoint = 'https://api.flickr.com/services/rest/' + \
+        '?method=flickr.people.getPhotos' + \
+        '&api_key=' + api_key + \
+        '&user_id=' + user_id + \
+        '&per_page=' + per_page + '&format=json&nojsoncallback=1'
+
+    response = requests.get(endpoint)
+    jsondata = json.loads(response.text)
+    write_photostream(user_id=user_id, pageno=1, jsondata=jsondata)
+
+    tot_pages = jsondata['photos']['pages']
+    for pageno in range(2, tot_pages + 1):
+        endpoint = 'https://api.flickr.com/services/rest/' + \
+            '?method=flickr.people.getPhotos' + \
+            '&api_key=' + api_key + \
+            '&user_id=' + user_id + \
+            '&per_page=' + per_page + \
+            '&page=' + str(pageno) + \
+            '&format=json&nojsoncallback=1'
+
+        response = requests.get(endpoint)
+        jsondata = json.loads(response.text)
+
+        write_photostream(user_id=user_id, pageno=pageno, jsondata=jsondata)
+        #if pageno >= 3:
+        #    break
+
+#-------------------------------------------------------------------------------
 def get_apikey(app):
     """Get Flickr API key for specified application.
 
@@ -89,5 +127,26 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
+def write_photostream(*, user_id, pageno, jsondata):
+    """Write a page of photostream results to local cache.
+
+    user_id = Flickr user ID
+    pageno = page number of the paged results from the Flickr API
+    jsondata = the JSON payload returned for this user/page
+
+    The data is written to the cache subfolder with this naming convention:
+    <user>-photostream-pageXXX.json
+    """
+    print('Caching photo list for {0} page # {1}'.format(user_id, pageno))
+
+    filename = user_id + '-photostream-page' + str(pageno).zfill(3) + '.json'
+    source_folder = os.path.dirname(os.path.realpath(__file__))
+    filename = os.path.join(source_folder, 'cache/' + filename)
+
+    with open(filename, 'w') as fhandle:
+        fhandle.write(json.dumps(jsondata, indent=4, sort_keys=True))
+
+#-------------------------------------------------------------------------------
 if __name__ == '__main__':
-    get_tags_example('dogerino')
+    #get_tags_example('dogerino')
+    cache_photostream('dougerino')
