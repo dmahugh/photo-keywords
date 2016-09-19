@@ -4,6 +4,7 @@ harvest Flickr tags and write to *-keyword.txt files
 Flickr API documentation: https://www.flickr.com/services/api/
 """
 import configparser
+import glob
 import json
 import os
 import requests
@@ -91,7 +92,11 @@ def cache_tags(*, user_id, pageno):
         keywords.append('flickr-' + user_id)
 
         taglist = ','.join(sorted(keywords))
-        print(photo_url + ' - ' + taken + ' - ' + title + ' - ' + taglist)
+
+        try:
+            print(photo_url + ' - ' + taken + ' - ' + title + ' - ' + taglist)
+        except UnicodeEncodeError as e:
+            print('*** UnicodeEncodeError ***')
 
         master_list.append({'user_id': user_id,
                             'title': title,
@@ -185,6 +190,27 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
+def tag_summary():
+    """Create summaries of cached tag data.
+    """
+    # show totals for all Flickr user IDs
+    users = ['dogerino', 'dougerino']
+    for user_id in users:
+        tot_photos = 0
+        tot_tags = 0
+        for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
+            with open(filename, 'r') as fhandle:
+                jsondata = json.loads(fhandle.read())
+                for photo in jsondata:
+                    tot_photos += 1
+                    tot_tags += len(photo['keywords']) - 1 # -1 because of 'flickr-userid' tag
+        print('{0} = {1} photos, {2} tags total'.format(user_id, tot_photos, tot_tags))
+
+        # generate a monthly.csv file to show monthly totals for the dogerino
+        # and dougerino users.
+        #/// CSV = yearmonth,dog_photos,dog_tags,doug_photos,doug_tags
+
+#-------------------------------------------------------------------------------
 def write_cache(*, user_id, pageno, datatype, jsondata):
     """Write photo tag data to local cache for one page of photostream.
 
@@ -206,11 +232,4 @@ if __name__ == '__main__':
     #get_tags_example('dogerino')
     #cache_photostream('dogerino')
     #cache_photostream('dougerino')
-
-    # status of caching tag data:
-    # dogerino: 1 done, 2-108 remaining
-    # dougerino: 0 done, 1-121 remaining
-    start = 2
-    end = 10
-    for pageno in range(start, end + 1):
-        cache_tags(user_id='dogerino', pageno=pageno)
+    tag_summary()
