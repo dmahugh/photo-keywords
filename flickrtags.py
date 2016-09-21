@@ -3,6 +3,7 @@ harvest Flickr tags and write to *-keyword.txt files
 
 Flickr API documentation: https://www.flickr.com/services/api/
 """
+from collections import Counter
 import configparser
 import glob
 import json
@@ -80,7 +81,7 @@ def cache_tags(*, user_id, pageno):
 
     master_list = [] # list of photos (dictionaries)
 
-    #photo_limit = 4 # ///
+    photo_limit = None # set this to a small number for quick testing of a few photos
     for photo in photolist:
         photo_info = photo_detail(photo)
 
@@ -100,14 +101,62 @@ def cache_tags(*, user_id, pageno):
 
         master_list.append({'user_id': user_id,
                             'title': title,
+                            'taken': taken,
                             'keywords': keywords,
                             'photo_url': photo_url})
 
-        #photo_limit -= 1 # ///
-        #if photo_limit == 0: # ///
-        #    break # ///
+        if photo_limit:
+            photo_limit -= 1
+            if photo_limit == 0:
+                break
 
     write_cache(user_id=user_id, pageno=pageno, datatype='tags', jsondata=master_list)
+
+#-------------------------------------------------------------------------------
+def generate_stats():
+    """Generate statistics from cached Flickr tag data.
+    """
+    #/// create a CSV showing # photos and tags per photo, summarized by month since August 2008
+
+    users = ['dogerino', 'dougerino'] # list of user IDs whose data is cached
+    keywords = [] # master list of tags
+
+    #/// need a different approach here - generate year/month totals for photos uploaded to
+    # dogerino and dougerino, so that we can do a stacked bar chart showing the migration
+    # from 100% dougerino to mostly dogerino
+    photosbymonth = [] # list of year/month for all photos
+
+    for user_id in users:
+        tot_photos = 0
+        tot_tags = 0
+        for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
+            with open(filename, 'r') as fhandle:
+                jsondata = json.loads(fhandle.read())
+                for photo in jsondata:
+                    # increment totals
+                    tot_photos += 1
+                    tot_tags += len(photo['keywords']) - 1 # -1 because of 'flickr-userid' tag
+                    # add keywords to master list of tags
+                    for keyword in photo['keywords']:
+                        # don't include auto-generated tags (flickr-dogerino/flickr-dougerino)
+                        if not keyword.lower().startswith('flickr-'):
+                            keywords.append(keyword)
+                    # add to year/month totals
+                    photosbymonth.append(photo['taken'][:7])
+
+        # print photo/tag totals for this user ID
+        print('{0} = {1} photos, {2} tags total'.format(user_id, tot_photos, tot_tags))
+
+    # print most common tags
+    tagtotals = Counter(keywords)
+    print('Total unique tags across ' + '/'.join(users) + ': {}'.format(len(tagtotals)))
+    for tag, cnt in tagtotals.most_common(20):
+        print(tag, cnt)
+
+    # print the year/month totals
+    ymtotals = Counter(photosbymonth)
+    for yearmonth in sorted(ymtotals):
+        print(yearmonth + ',' + str(ymtotals[yearmonth]))
 
 #-------------------------------------------------------------------------------
 def get_apikey(app):
@@ -190,27 +239,6 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
-def tag_summary():
-    """Create summaries of cached tag data.
-    """
-    # show totals for all Flickr user IDs
-    users = ['dogerino', 'dougerino']
-    for user_id in users:
-        tot_photos = 0
-        tot_tags = 0
-        for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
-            with open(filename, 'r') as fhandle:
-                jsondata = json.loads(fhandle.read())
-                for photo in jsondata:
-                    tot_photos += 1
-                    tot_tags += len(photo['keywords']) - 1 # -1 because of 'flickr-userid' tag
-        print('{0} = {1} photos, {2} tags total'.format(user_id, tot_photos, tot_tags))
-
-        # generate a monthly.csv file to show monthly totals for the dogerino
-        # and dougerino users.
-        #/// CSV = yearmonth,dog_photos,dog_tags,doug_photos,doug_tags
-
-#-------------------------------------------------------------------------------
 def write_cache(*, user_id, pageno, datatype, jsondata):
     """Write photo tag data to local cache for one page of photostream.
 
@@ -232,4 +260,13 @@ if __name__ == '__main__':
     #get_tags_example('dogerino')
     #cache_photostream('dogerino')
     #cache_photostream('dougerino')
-    tag_summary()
+
+    # dogerino: DONE
+    # dougerino: 1-90 done, to do = 91-121
+    #user_id = 'dougerino'
+    #start = 91
+    #end = 121
+    #for pageno in range(start, end + 1):
+    #    cache_tags(user_id=user_id, pageno=pageno)
+
+    generate_stats()
