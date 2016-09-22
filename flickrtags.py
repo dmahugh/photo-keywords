@@ -121,10 +121,18 @@ def generate_stats():
     users = ['dogerino', 'dougerino'] # list of user IDs whose data is cached
     keywords = [] # master list of tags
 
-    #/// need a different approach here - generate year/month totals for photos uploaded to
-    # dogerino and dougerino, so that we can do a stacked bar chart showing the migration
-    # from 100% dougerino to mostly dogerino
-    photosbymonth = [] # list of year/month for all photos
+    # Generate year/month totals for photos uploaded to dogerino and dougerino, so
+    # that we can do a stacked bar chart showing the migration from 100% dougerino to
+    # mostly dogerino we're interested in Oct 2004 through August 2016 ...
+    ymtotals = dict()
+    for year in range(2004, 2017):
+        for month in range(1, 13):
+            if (year == 2004 and month < 10) or (year == 2016 and month > 8):
+                continue
+            yearmonth = str(year) + '-' + str(month).zfill(2)
+            for user_id in users:
+                ymtotals[yearmonth + '-' + user_id + '-keywords'] = 0
+                ymtotals[yearmonth + '-' + user_id + '-photos'] = 0
 
     for user_id in users:
         tot_photos = 0
@@ -135,14 +143,18 @@ def generate_stats():
                 for photo in jsondata:
                     # increment totals
                     tot_photos += 1
+                    ymdictkey = photo['taken'][:7] + '-' + user_id + '-photos'
+                    if ymdictkey in ymtotals:
+                        ymtotals[ymdictkey] += 1
                     tot_tags += len(photo['keywords']) - 1 # -1 because of 'flickr-userid' tag
                     # add keywords to master list of tags
+                    ymdictkey = photo['taken'][:7] + '-' + user_id + '-keywords'
                     for keyword in photo['keywords']:
                         # don't include auto-generated tags (flickr-dogerino/flickr-dougerino)
                         if not keyword.lower().startswith('flickr-'):
                             keywords.append(keyword)
-                    # add to year/month totals
-                    photosbymonth.append(photo['taken'][:7])
+                            if ymdictkey in ymtotals:
+                                ymtotals[ymdictkey] += 1
 
         # print photo/tag totals for this user ID
         print('{0} = {1} photos, {2} tags total'.format(user_id, tot_photos, tot_tags))
@@ -153,10 +165,22 @@ def generate_stats():
     for tag, cnt in tagtotals.most_common(20):
         print(tag, cnt)
 
-    # print the year/month totals
-    ymtotals = Counter(photosbymonth)
-    for yearmonth in sorted(ymtotals):
-        print(yearmonth + ',' + str(ymtotals[yearmonth]))
+    # print year/month totals (in CSV format)
+    columns = ['yearmonth']
+    for user_id in users:
+        columns.append(user_id + '-photos')
+        columns.append(user_id + '-keywords')
+    print(','.join(columns))
+    for year in range(2004, 2017):
+        for month in range(1, 13):
+            if (year == 2004 and month < 10) or (year == 2016 and month > 8):
+                continue
+            yearmonth = str(year) + '-' + str(month).zfill(2)
+            values = [yearmonth]
+            for user_id in users:
+                values.append(str(ymtotals[yearmonth + '-' + user_id + '-photos']))
+                values.append(str(ymtotals[yearmonth + '-' + user_id + '-keywords']))
+            print(','.join(values))
 
 #-------------------------------------------------------------------------------
 def get_apikey(app):
