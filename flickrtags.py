@@ -285,6 +285,8 @@ if __name__ == '__main__':
     #cache_photostream('dogerino')
     #cache_photostream('dougerino')
 
+    # need to break the work into chunks that are under 3600 API calls (the
+    # hourly limit), then wait at least an hour between chunks ...
     # dogerino: DONE
     # dougerino: 1-90 done, to do = 91-121
     #user_id = 'dougerino'
