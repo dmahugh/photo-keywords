@@ -6,9 +6,12 @@ For now, only includes [flickrtags.py](https://github.com/dmahugh/photo-keywords
 
 ## Flickr Tags
 
-First step was to get all of my Flickr tags local, where I can associated them with the original images in my backup stream. This requires
+First step was to get all of my Flickr tags local, where I can associate them with the original images in my backup stream. This requires
 two sets of calls to the Flickr API: first we get photos for each account (method=flickr.people.getPhotos), then for each photo we get
 the tags and timestamp (method=flick.photos.getInfo).
+
+Flickr does *not* store the original filename, so we'll use the timestamp to figure out which is the original image in our backup stream.
+(This assumes the timestamp has been unchanged by the round trip through Flick; we'll find out soon.)
 
 Summary of data retrieved:
 
