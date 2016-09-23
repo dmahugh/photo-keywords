@@ -2,7 +2,7 @@
 
 Tools for managing keywords associated with photographs.
 
-For now, this is just the code used to harvest all of the tags from my Dougerino and Dogerino accounts on Flickr.
+For now, only includes [flickrtags.py](https://github.com/dmahugh/photo-keywords/blob/master/flickrtags.py), a program to harvest all photo tags from my Dougerino and Dogerino accounts on Flickr.
 
 As described [here](http://mahugh.com/2013/04/02/my-backup-process/), I've been using Flickr to search my photos
 for years. But now that I have all of my photo-description data local (including the Flickr tags as well as other
