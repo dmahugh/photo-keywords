@@ -20,13 +20,10 @@ I used a page size of 100, to make it easy to manage batches of photo info calls
 
 Summary of data retrieved:
 
-| Category/Entity | Count |
-| --- | --- |
-| Dougerino photos  | 12,205  |
-| Dogerino photos  | 10,713  |
-| *TOTAL PHOTOS* | *22,918* |
-| Dougerino tags | 35,742  |
-| Dogerino tags | 27,206  |
-| *TOTAL TAGS* | *62,948* |
+| Flickr account | Photos | Tags |
+| --- | --- | --- |
+| [Dougerino](http://flickr.com/photos/dougerino) | 12,205 | 35,742 |
+| [Dogerino](http://flickr.com/photos/dogerino) | 10,713 | 27,206 |
+| TOTAL | 22,918 | 62,948 |
 
 ![monthly totals](images/monthlytotals.png)
