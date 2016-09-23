@@ -11,7 +11,7 @@ Then I'll put together a simple search facility that I'll stand up where I can u
 
 ## Flickr Tags
 
-To retrieve all of the tags associated with my ~24,000 photos across two Flickr accounts, there were two steps:
+To retrieve all of the tags associated with my ~23,000 photos across two Flickr accounts, there were two steps:
 
 1) Get photostream for each account from flickr.people.getPhotos.
 2) Get tags for each photo from flick.photos.getInfo.
@@ -24,7 +24,9 @@ Summary of data retrieved:
 | --- | --- |
 | Dougerino photos  | 12,205  |
 | Dogerino photos  | 10,713  |
+| *TOTAL PHOTOS* | *22,918* |
 | Dougerino tags | 35,742  |
 | Dogerino tags | 27,206  |
+| *TOTAL TAGS* | *62,948* |
 
 ![monthly totals](images/monthlytotals.png)
