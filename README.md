@@ -11,10 +11,10 @@ Then I'll put together a simple search facility that I'll stand up where I can u
 
 ## Flickr Tags
 
-To retrieve all of the tags associated with my ~23,000 photos across two Flickr accounts, there were two steps:
+Two API calls were used to retrieve all of the 62,948 tags associated with my 22,918 photos across two Flickr accounts:
 
-1) Get photostream for each account from flickr.people.getPhotos.
-2) Get tags for each photo from flick.photos.getInfo.
+1) method=flickr.people.getPhotos => get photos for each account
+2) method=flick.photos.getInfo => get tags for each photo
 
 I used a page size of 100, to make it easy to manage batches of photo info calls to accommodate the 3600 call per hour API rate limit.
 
