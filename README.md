@@ -23,6 +23,17 @@ Summary of data retrieved:
 
 ![monthly totals](images/monthlytotals.png)
 
+The data in the chart above shows some key dates for me over the last 12 years:
+
+* September 2004 - moved from analog to digital, with a Nikon D70
+* October 2005 - moved to Seattle, took lots of pictures
+* August 2008 - [started using Flickr](http://mahugh.com/2008/08/24/finallyeluctantly-flickr/)
+* October 2010 - create a separate Dogerino account for dog photos after we got Alice
+* May 2011 - massive [road trip](https://www.flickr.com/photos/dogerino/albums/72157626806442330) through 21 states
+* April 2012 - laptop stolen, lost a month of photos before posting them
+* July 2015 - road trip to the Senior Games
+* August 2015 - started using [Instagram](https://www.instagram.com/dougerino/), stopped posting so much to Flickr
+
 As described [here](http://mahugh.com/2013/04/02/my-backup-process/), I've been using Flickr to search my photos
 for years. But now that I have all of my photo-description data local (including the Flickr tags as well as other
 information from various sources), I'm going to merge it into a single consistent approach to tagging my photos.
