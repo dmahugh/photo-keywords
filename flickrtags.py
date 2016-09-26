@@ -9,6 +9,7 @@ import glob
 import json
 import os
 import requests
+import time
 
 #-------------------------------------------------------------------------------
 def cache_filename(*, user_id, pageno, datatype):
@@ -263,6 +264,21 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
+def filename_ts(filename=None):
+    """Return timestamp as a string.
+
+    filename = optional file, if passed then timestamp is returned for the file
+
+    Otherwise, returns current timestamp.
+    <internal>
+    """
+    if filename:
+        unixtime = os.path.getmtime(filename)
+        return time.strftime('%m/%d/%Y %H:%M:%S', time.localtime(unixtime))
+    else:
+        return time.strftime('%m/%d/%Y %H:%M:%S', time.localtime(time.time()))
+
+#-------------------------------------------------------------------------------
 def ts_search(folder, timestamp):
     """Search a folder for photos matching a timestamp.
 
@@ -272,8 +288,13 @@ def ts_search(folder, timestamp):
     Returns a list of full-path filenames that match the timestamp.
     """
     matchlist = []
-    #/// search for JPG/JPEG/NEF/PNG/BMP files with this timestamp
-    #/// good error handling, anything's possible
+    for filename in glob.glob(os.path.join(folder, '*.*')):
+        fname, fext = os.path.splitext(filename)
+        if fext.lower() not in ['.jpg', '.jpeg', '.nef', '.png', '.bmp', '.gif']:
+            continue
+        if filename_ts(filename) == timestamp:
+            matchlist.append(filename)
+
     return matchlist
 
 #-------------------------------------------------------------------------------
@@ -287,8 +308,10 @@ def ts_filename(timestamp):
     """
     matches = []
     photo_home = 'd:\\doug\\photos' #/// get from phototag config settings
-    day_folder = '///'
-    month_folder = '///'
+    month_folder = os.path.join(photo_home,
+                                timestamp[:4],
+                                timestamp[5:7])
+    day_folder = os.path.join(month_folder, timestamp[8:10])
 
     matches.extend(ts_search(day_folder, timestamp))
     matches.extend(ts_search(month_folder, timestamp))
