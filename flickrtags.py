@@ -8,8 +8,9 @@ import configparser
 import glob
 import json
 import os
-import requests
 import time
+
+import requests
 
 #-------------------------------------------------------------------------------
 def cache_filename(*, user_id, pageno, datatype):
@@ -274,9 +275,9 @@ def filename_ts(filename=None):
     """
     if filename:
         unixtime = os.path.getmtime(filename)
-        return time.strftime('%m/%d/%Y %H:%M:%S', time.localtime(unixtime))
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
     else:
-        return time.strftime('%m/%d/%Y %H:%M:%S', time.localtime(time.time()))
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 
 #-------------------------------------------------------------------------------
 def ts_search(folder, timestamp):
@@ -289,10 +290,14 @@ def ts_search(folder, timestamp):
     """
     matchlist = []
     for filename in glob.glob(os.path.join(folder, '*.*')):
-        fname, fext = os.path.splitext(filename)
+        _, fext = os.path.splitext(filename)
         if fext.lower() not in ['.jpg', '.jpeg', '.nef', '.png', '.bmp', '.gif']:
             continue
-        if filename_ts(filename) == timestamp:
+        file_ts = filename_ts(filename)
+        if '_9089' in filename:
+            print('>>> ' + filename)
+            print('>>> comparing {0} to {1}'.format(file_ts, timestamp))
+        if file_ts == timestamp:
             matchlist.append(filename)
 
     return matchlist
@@ -351,8 +356,8 @@ if __name__ == '__main__':
     #for pageno in range(start, end + 1):
     #    cache_tags(user_id=user_id, pageno=pageno)
 
-    for TS in ['2015-04-04 13:08:33',
-               '2015-04-04 13:08:25',
-               '2015-04-18 18:41:07']:
+    for TS in ['2014-12-24 12:53:11', 
+               '2014-12-24 12:36:44', 
+               '2014-12-24 11:38:20']:
         print(TS)
         print(ts_filename(TS))
