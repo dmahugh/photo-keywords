@@ -263,6 +263,39 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
+def ts_search(folder, timestamp):
+    """Search a folder for photos matching a timestamp.
+
+    folder = folder name
+    timestamp = timestamp to match, 'YYYY-MM-DD HH:MM:SS'
+
+    Returns a list of full-path filenames that match the timestamp.
+    """
+    matchlist = []
+    #/// search for JPG/JPEG/NEF/PNG/BMP files with this timestamp
+    #/// good error handling, anything's possible
+    return matchlist
+
+#-------------------------------------------------------------------------------
+def ts_filename(timestamp):
+    """Convert a Flickr timestamp to a list of possible matching files in the
+    photos folder hierarchy.
+
+    timestamp = 'YYYY-MM-DD HH:MM:SS' format assumed (all components required)
+
+    Returns a list of 0 or more possible matching filenames.
+    """
+    matches = []
+    photo_home = 'd:\\doug\\photos' #/// get from phototag config settings
+    day_folder = '///'
+    month_folder = '///'
+
+    matches.extend(ts_search(day_folder, timestamp))
+    matches.extend(ts_search(month_folder, timestamp))
+
+    return matches
+
+#-------------------------------------------------------------------------------
 def write_cache(*, user_id, pageno, datatype, jsondata):
     """Write photo tag data to local cache for one page of photostream.
 
@@ -295,4 +328,8 @@ if __name__ == '__main__':
     #for pageno in range(start, end + 1):
     #    cache_tags(user_id=user_id, pageno=pageno)
 
-    generate_stats()
+    for TS in ['2015-04-04 13:08:33',
+               '2015-04-04 13:08:25',
+               '2015-04-18 18:41:07']:
+        print(TS)
+        print(ts_filename(TS))
