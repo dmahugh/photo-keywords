@@ -5,6 +5,7 @@ Flickr API documentation: https://www.flickr.com/services/api/
 """
 from collections import Counter
 import configparser
+import datetime
 import glob
 import json
 import os
@@ -288,6 +289,7 @@ def ts_search(folder, timestamp):
 
     Returns a list of full-path filenames that match the timestamp.
     """
+    folder = 'c:\\temp' #/// for testing
     matchlist = []
     for filename in glob.glob(os.path.join(folder, '*.*')):
         _, fext = os.path.splitext(filename)
@@ -319,7 +321,9 @@ def ts_filename(timestamp):
     day_folder = os.path.join(month_folder, timestamp[8:10])
 
     matches.extend(ts_search(day_folder, timestamp))
-    matches.extend(ts_search(month_folder, timestamp))
+    if not matches:
+        # if no matches in day folder, try the month folder
+        matches.extend(ts_search(month_folder, timestamp))
 
     return matches
 
@@ -339,6 +343,31 @@ def write_cache(*, user_id, pageno, datatype, jsondata):
 
     with open(filename, 'w') as fhandle:
         fhandle.write(json.dumps(jsondata, indent=4, sort_keys=True))
+
+#-------------------------------------------------------------------------------
+def seconds_delta(timestamp1, timestamp2):
+    """Calculate the number of seconds between two timestamps.
+
+    timestamp1/timestamp2 = 'YYYY-MM-DD HH:MM:SS' strings
+
+    Returns the number of seconds between these two date/time representations.
+    """
+    datetime1 = str_to_datetime(timestamp1)
+    datetime2 = str_to_datetime(timestamp2)
+    diff = datetime1 - datetime2 # creates a timedelta object
+    return abs(diff.total_seconds())
+
+#-------------------------------------------------------------------------------
+def str_to_datetime(timestamp):
+    """Convert a 'YYYY-MM-DD HH:MM:SS' string to a datetime object.
+    """
+    year = int(timestamp[:4])
+    month = int(timestamp[5:7])
+    day = int(timestamp[8:10])
+    hours = int(timestamp[11:13])
+    minutes = int(timestamp[14:16])
+    seconds = int(timestamp[17:19])
+    return datetime.datetime(year, month, day, hours, minutes, seconds)
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
