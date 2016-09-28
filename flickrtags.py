@@ -291,16 +291,26 @@ def ts_search(folder, timestamp):
     """
     folder = 'c:\\temp' #/// for testing
     matchlist = []
+
     for filename in glob.glob(os.path.join(folder, '*.*')):
         _, fext = os.path.splitext(filename)
         if fext.lower() not in ['.jpg', '.jpeg', '.nef', '.png', '.bmp', '.gif']:
             continue
         file_ts = filename_ts(filename)
-        if '_9089' in filename:
-            print('>>> ' + filename)
-            print('>>> comparing {0} to {1}'.format(file_ts, timestamp))
         if file_ts == timestamp:
             matchlist.append(filename)
+
+    if not matchlist:
+        nseconds = 5
+        # no matches were found, so try searching for a photo whose timestamp
+        # is within nseconds of the value we're trying to match
+        for filename in glob.glob(os.path.join(folder, '*.*')):
+            _, fext = os.path.splitext(filename)
+            if fext.lower() not in ['.jpg', '.jpeg', '.nef', '.png', '.bmp', '.gif']:
+                continue
+            file_ts = filename_ts(filename)
+            if seconds_delta(file_ts, timestamp) <= nseconds:
+                matchlist.append(filename)
 
     return matchlist
 
