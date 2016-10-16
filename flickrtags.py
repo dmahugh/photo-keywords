@@ -9,6 +9,7 @@ import datetime
 import glob
 import json
 import os
+import sys
 import time
 
 import requests
@@ -407,8 +408,10 @@ if __name__ == '__main__':
     #    print(TS)
     #    print(ts_filename(TS))
 
+    TESTRUN = 5
     for user_id in ['dogerino', 'dougerino']:
         for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
+            print(filename)
             with open(filename, 'r') as fhandle:
                 jsondata = json.loads(fhandle.read())
                 for photo in jsondata:
@@ -416,3 +419,6 @@ if __name__ == '__main__':
                     PHOTOFILENAME = ts_filename(TS)
                     if len(PHOTOFILENAME) != 1:
                         print(TS, PHOTOFILENAME)
+                        TESTRUN -= 1
+                        if TESTRUN == 0:
+                            sys.exit()
