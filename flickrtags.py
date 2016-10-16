@@ -289,7 +289,7 @@ def ts_search(folder, timestamp):
 
     Returns a list of full-path filenames that match the timestamp.
     """
-    folder = 'c:\\temp' #/// for testing
+    #folder = 'c:\\temp' #/// for testing
     matchlist = []
 
     for filename in glob.glob(os.path.join(folder, '*.*')):
@@ -301,7 +301,8 @@ def ts_search(folder, timestamp):
             matchlist.append(filename)
 
     if not matchlist:
-        nseconds = 5
+        #print('NO MATCH for ' + timestamp + ' -->> ' + folder)
+        nseconds = 8
         # no matches were found, so try searching for a photo whose timestamp
         # is within nseconds of the value we're trying to match
         for filename in glob.glob(os.path.join(folder, '*.*')):
@@ -381,10 +382,12 @@ def str_to_datetime(timestamp):
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
+
+    # DATA HARVESTING - completed ----------------------------------------------
+
     #get_tags_example('dogerino')
     #cache_photostream('dogerino')
     #cache_photostream('dougerino')
-
     # need to break the work into chunks that are under 3600 API calls (the
     # hourly limit), then wait at least an hour between chunks ...
     # dogerino: DONE
@@ -395,8 +398,21 @@ if __name__ == '__main__':
     #for pageno in range(start, end + 1):
     #    cache_tags(user_id=user_id, pageno=pageno)
 
-    for TS in ['2014-12-24 12:53:11', 
-               '2014-12-24 12:36:44', 
-               '2014-12-24 11:38:20']:
-        print(TS)
-        print(ts_filename(TS))
+    # MATCHING TIMESTAMPS TO FILENAMES -----------------------------------------
+
+    # simple test ...
+    #for TS in ['2014-12-24 12:53:11', 
+    #           '2014-12-24 12:36:44', 
+    #           '2014-12-24 11:38:20']:
+    #    print(TS)
+    #    print(ts_filename(TS))
+
+    for user_id in ['dogerino', 'dougerino']:
+        for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
+            with open(filename, 'r') as fhandle:
+                jsondata = json.loads(fhandle.read())
+                for photo in jsondata:
+                    TS = photo['taken']
+                    PHOTOFILENAME = ts_filename(TS)
+                    if len(PHOTOFILENAME) != 1:
+                        print(TS, PHOTOFILENAME)
