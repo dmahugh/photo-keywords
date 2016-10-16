@@ -116,6 +116,21 @@ def cache_tags(*, user_id, pageno):
     write_cache(user_id=user_id, pageno=pageno, datatype='tags', jsondata=master_list)
 
 #-------------------------------------------------------------------------------
+def filename_ts(filename=None):
+    """Return timestamp as a string.
+
+    filename = optional file, if passed then timestamp is returned for the file
+
+    Otherwise, returns current timestamp.
+    <internal>
+    """
+    if filename:
+        unixtime = os.path.getmtime(filename)
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
+    else:
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+#-------------------------------------------------------------------------------
 def generate_stats():
     """Generate statistics from cached Flickr tag data.
     """
@@ -266,19 +281,52 @@ def photostream(user_id):
     return json.loads(response.text)
 
 #-------------------------------------------------------------------------------
-def filename_ts(filename=None):
-    """Return timestamp as a string.
+def seconds_delta(timestamp1, timestamp2):
+    """Calculate the number of seconds between two timestamps.
 
-    filename = optional file, if passed then timestamp is returned for the file
+    timestamp1/timestamp2 = 'YYYY-MM-DD HH:MM:SS' strings
 
-    Otherwise, returns current timestamp.
-    <internal>
+    Returns the number of seconds between these two date/time representations.
     """
-    if filename:
-        unixtime = os.path.getmtime(filename)
-        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
-    else:
-        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    datetime1 = str_to_datetime(timestamp1)
+    datetime2 = str_to_datetime(timestamp2)
+    diff = datetime1 - datetime2 # creates a timedelta object
+    return abs(diff.total_seconds())
+
+#-------------------------------------------------------------------------------
+def str_to_datetime(timestamp):
+    """Convert a 'YYYY-MM-DD HH:MM:SS' string to a datetime object.
+    """
+    year = int(timestamp[:4])
+    month = int(timestamp[5:7])
+    day = int(timestamp[8:10])
+    hours = int(timestamp[11:13])
+    minutes = int(timestamp[14:16])
+    seconds = int(timestamp[17:19])
+    return datetime.datetime(year, month, day, hours, minutes, seconds)
+
+#-------------------------------------------------------------------------------
+def ts_filename(timestamp):
+    """Convert a Flickr timestamp to a list of possible matching files in the
+    photos folder hierarchy.
+
+    timestamp = 'YYYY-MM-DD HH:MM:SS' format assumed (all components required)
+
+    Returns a list of 0 or more possible matching filenames.
+    """
+    matches = []
+    photo_home = 'd:\\doug\\photos' #/// get from phototag config settings
+    month_folder = os.path.join(photo_home,
+                                timestamp[:4],
+                                timestamp[5:7])
+    day_folder = os.path.join(month_folder, timestamp[8:10])
+
+    matches.extend(ts_search(day_folder, timestamp))
+    if not matches:
+        # if no matches in day folder, try the month folder
+        matches.extend(ts_search(month_folder, timestamp))
+
+    return matches
 
 #-------------------------------------------------------------------------------
 def ts_search(folder, timestamp):
@@ -316,29 +364,6 @@ def ts_search(folder, timestamp):
     return matchlist
 
 #-------------------------------------------------------------------------------
-def ts_filename(timestamp):
-    """Convert a Flickr timestamp to a list of possible matching files in the
-    photos folder hierarchy.
-
-    timestamp = 'YYYY-MM-DD HH:MM:SS' format assumed (all components required)
-
-    Returns a list of 0 or more possible matching filenames.
-    """
-    matches = []
-    photo_home = 'd:\\doug\\photos' #/// get from phototag config settings
-    month_folder = os.path.join(photo_home,
-                                timestamp[:4],
-                                timestamp[5:7])
-    day_folder = os.path.join(month_folder, timestamp[8:10])
-
-    matches.extend(ts_search(day_folder, timestamp))
-    if not matches:
-        # if no matches in day folder, try the month folder
-        matches.extend(ts_search(month_folder, timestamp))
-
-    return matches
-
-#-------------------------------------------------------------------------------
 def write_cache(*, user_id, pageno, datatype, jsondata):
     """Write photo tag data to local cache for one page of photostream.
 
@@ -354,31 +379,6 @@ def write_cache(*, user_id, pageno, datatype, jsondata):
 
     with open(filename, 'w') as fhandle:
         fhandle.write(json.dumps(jsondata, indent=4, sort_keys=True))
-
-#-------------------------------------------------------------------------------
-def seconds_delta(timestamp1, timestamp2):
-    """Calculate the number of seconds between two timestamps.
-
-    timestamp1/timestamp2 = 'YYYY-MM-DD HH:MM:SS' strings
-
-    Returns the number of seconds between these two date/time representations.
-    """
-    datetime1 = str_to_datetime(timestamp1)
-    datetime2 = str_to_datetime(timestamp2)
-    diff = datetime1 - datetime2 # creates a timedelta object
-    return abs(diff.total_seconds())
-
-#-------------------------------------------------------------------------------
-def str_to_datetime(timestamp):
-    """Convert a 'YYYY-MM-DD HH:MM:SS' string to a datetime object.
-    """
-    year = int(timestamp[:4])
-    month = int(timestamp[5:7])
-    day = int(timestamp[8:10])
-    hours = int(timestamp[11:13])
-    minutes = int(timestamp[14:16])
-    seconds = int(timestamp[17:19])
-    return datetime.datetime(year, month, day, hours, minutes, seconds)
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
