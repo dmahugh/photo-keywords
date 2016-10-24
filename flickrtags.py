@@ -125,11 +125,29 @@ def filename_ts(filename=None):
     Otherwise, returns current timestamp.
     <internal>
     """
-    if filename:
-        unixtime = os.path.getmtime(filename)
-        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
-    else:
+    if not filename:
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+    return_val = None
+
+    unixtime = os.path.getmtime(filename)
+    retval = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(unixtime))
+
+    # attempt to read EXIF data to get DateTimeOriginal 
+    from PIL import Image
+    from PIL.ExifTags import TAGS
+    imagefile = Image.open(filename)
+    try:
+        exifdata = imagefile._getexif()
+        for tag, value in exifdata.items():
+            decoded = TAGS.get(tag, tag)
+            if decoded == 'DateTimeOriginal':
+                retval = value.replace(':', '-', 2)
+                break
+    except:
+        pass
+
+    return retval
 
 #-------------------------------------------------------------------------------
 def generate_stats():
@@ -347,7 +365,6 @@ def ts_search(folder, timestamp):
     Returns a list of full-path filenames that match the timestamp.
     """
     #folder = 'c:\\temp' #/// for testing
-    print('>>>>> ' + folder)
     matchlist = []
 
     for filename in glob.glob(os.path.join(folder, '*.*')):
@@ -420,7 +437,7 @@ if __name__ == '__main__':
     #    print(TS)
     #    print(ts_filename(TS))
 
-    TESTRUN = 50 # 13
+    TESTRUN = 50
     for user_id in ['dogerino', 'dougerino']:
         for datasource in glob.glob('cache/' + user_id + '-tags-*.json'):
             print('SOURCE -> ' + datasource)
