@@ -347,6 +347,7 @@ def ts_search(folder, timestamp):
             continue
         file_ts = filename_ts(filename)
         if file_ts == timestamp:
+            print(filename + ' <- EXACT MATCH')
             matchlist.append(filename)
 
     if not matchlist:
@@ -359,7 +360,9 @@ def ts_search(folder, timestamp):
             if fext.lower() not in ['.jpg', '.jpeg', '.nef', '.png', '.bmp', '.gif']:
                 continue
             file_ts = filename_ts(filename)
-            if seconds_delta(file_ts, timestamp) <= nseconds:
+            diff = seconds_delta(file_ts, timestamp)
+            if diff <= nseconds:
+                print(filename + ' <- timestamps differ by {0} seconds'.format(diff))
                 matchlist.append(filename)
 
     return matchlist
@@ -408,17 +411,16 @@ if __name__ == '__main__':
     #    print(TS)
     #    print(ts_filename(TS))
 
-    TESTRUN = 5
+    TESTRUN = 10
     for user_id in ['dogerino', 'dougerino']:
-        for filename in glob.glob('cache/' + user_id + '-tags-*.json'):
-            print(filename)
-            with open(filename, 'r') as fhandle:
+        for datasource in glob.glob('cache/' + user_id + '-tags-*.json'):
+            print('SOURCE -> ' + datasource)
+            with open(datasource, 'r') as fhandle:
                 jsondata = json.loads(fhandle.read())
                 for photo in jsondata:
                     TS = photo['taken']
+                    print('\ntimestamp to match: ' + TS)
                     PHOTOFILENAME = ts_filename(TS)
-                    if len(PHOTOFILENAME) != 1:
-                        print(TS, PHOTOFILENAME)
-                        TESTRUN -= 1
-                        if TESTRUN == 0:
-                            sys.exit()
+                    TESTRUN -= 1
+                    if TESTRUN == 0:
+                        sys.exit()
