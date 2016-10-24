@@ -321,11 +321,19 @@ def ts_filename(timestamp):
                                 timestamp[:4],
                                 timestamp[5:7])
     day_folder = os.path.join(month_folder, timestamp[8:10])
+    posted_photos = os.path.join(photo_home,
+                                 'posted photos',
+                                 timestamp[:4],
+                                 timestamp[5:7])
 
-    matches.extend(ts_search(day_folder, timestamp))
+
+    matches.extend(ts_search(posted_photos, timestamp))
     if not matches:
-        # if no matches in day folder, try the month folder
-        matches.extend(ts_search(month_folder, timestamp))
+        # if no match in posted photos, try the day folder
+        matches.extend(ts_search(day_folder, timestamp))
+        if not matches:
+            # if no matches in day folder, try the month folder
+            matches.extend(ts_search(month_folder, timestamp))
 
     return matches
 
@@ -339,6 +347,7 @@ def ts_search(folder, timestamp):
     Returns a list of full-path filenames that match the timestamp.
     """
     #folder = 'c:\\temp' #/// for testing
+    print('>>>>> ' + folder)
     matchlist = []
 
     for filename in glob.glob(os.path.join(folder, '*.*')):
@@ -411,7 +420,7 @@ if __name__ == '__main__':
     #    print(TS)
     #    print(ts_filename(TS))
 
-    TESTRUN = 10
+    TESTRUN = 50 # 13
     for user_id in ['dogerino', 'dougerino']:
         for datasource in glob.glob('cache/' + user_id + '-tags-*.json'):
             print('SOURCE -> ' + datasource)
